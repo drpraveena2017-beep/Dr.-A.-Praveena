@@ -9,7 +9,7 @@ const App: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState('home');
   
-  // Profile Image State with Persistence (using constant for initial)
+  // Profile Image State with Persistence
   const [profileImage, setProfileImage] = useState<string>(() => {
     const saved = localStorage.getItem('dr_praveena_profile_photo');
     return saved || PROFILE_IMAGE;
@@ -30,9 +30,12 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const handleScroll = () => {
+      // Toggle header background opacity/shadow
       setIsScrolled(window.scrollY > 50);
-      const sections = ['home', 'about', 'skills', 'experience', 'education', 'contact'];
-      const scrollPosition = window.scrollY + 120;
+      
+      // Detection logic for active section highlighting
+      const sections = ['home', 'about', 'expertise', 'journey', 'academic', 'contact'];
+      const scrollPosition = window.scrollY + 200; // Trigger point offset
 
       for (const section of sections) {
         const element = document.getElementById(section);
@@ -49,6 +52,34 @@ const App: React.FC = () => {
     handleScroll();
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Defined navigation links with exact mapping to section IDs
+  const navLinks = [
+    { name: 'ABOUT', href: '#about', id: 'about' },
+    { name: 'EXPERTISE', href: '#expertise', id: 'expertise' },
+    { name: 'JOURNEY', href: '#journey', id: 'journey' },
+    { name: 'ACADEMIC', href: '#academic', id: 'academic' },
+    { name: 'CONTACT', href: '#contact', id: 'contact' },
+  ];
+
+  // Programmatic scroll to ensure it works across all browsers/environments
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, targetId: string) => {
+    e.preventDefault();
+    const element = document.getElementById(targetId);
+    if (element) {
+      const offset = 80; // Approximate height of the sticky nav
+      const bodyRect = document.body.getBoundingClientRect().top;
+      const elementRect = element.getBoundingClientRect().top;
+      const elementPosition = elementRect - bodyRect;
+      const offsetPosition = elementPosition - offset;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      });
+      setMobileMenuOpen(false);
+    }
+  };
 
   const handleProfileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -87,58 +118,43 @@ const App: React.FC = () => {
     }
   };
 
-  const navLinks = [
-    { name: 'About', href: '#about', id: 'about' },
-    { name: 'Expertise', href: '#skills', id: 'skills' },
-    { name: 'Journey', href: '#experience', id: 'experience' },
-    { name: 'Academic', href: '#education', id: 'education' },
-  ];
-
   return (
     <div className="min-h-screen bg-stone-50">
-      {/* Navigation */}
+      {/* Navigation - Fixed at top */}
       <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled ? 'bg-white/95 backdrop-blur-md shadow-md py-3' : 'bg-transparent py-6'
+        isScrolled ? 'bg-white/95 backdrop-blur-md shadow-md py-4' : 'bg-transparent py-6'
       }`}>
         <div className="container mx-auto px-6 flex justify-between items-center">
-          <a href="#home" className={`text-2xl transition-all duration-300 ${isScrolled ? 'text-emerald-theme' : 'text-white'}`}>
+          <a href="#home" onClick={(e) => handleNavClick(e, 'home')} className={`text-2xl transition-all duration-300 ${isScrolled ? 'text-emerald-theme' : 'text-white'}`}>
             <i className="fas fa-graduation-cap"></i>
           </a>
           
-          <div className="hidden md:flex items-center space-x-8">
-            <div className="flex space-x-6 lg:space-x-8">
+          <div className="hidden md:flex items-center space-x-10">
+            <div className="flex space-x-8 lg:space-x-12">
               {navLinks.map((link) => (
                 <a
                   key={link.name}
                   href={link.href}
-                  className={`text-xs lg:text-sm font-semibold uppercase tracking-widest transition-all relative group ${
+                  onClick={(e) => handleNavClick(e, link.id)}
+                  className={`text-[11px] lg:text-[13px] font-bold uppercase tracking-[0.15em] transition-all relative group ${
                     isScrolled 
-                      ? activeSection === link.id ? 'text-emerald-theme font-bold' : 'text-stone-600 hover:text-emerald-800' 
+                      ? activeSection === link.id ? 'text-emerald-theme' : 'text-stone-600 hover:text-emerald-800' 
                       : activeSection === link.id ? 'text-white' : 'text-stone-200 hover:text-white'
                   }`}
                 >
                   {link.name}
-                  <span className={`absolute -bottom-1 left-0 h-0.5 bg-current transition-all duration-300 ${
+                  <span className={`absolute -bottom-1.5 left-0 h-0.5 bg-current transition-all duration-300 ${
                     activeSection === link.id ? 'w-full' : 'w-0 group-hover:w-full'
                   }`}></span>
                 </a>
               ))}
             </div>
-            <a 
-              href="#contact"
-              className={`px-6 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-all ${
-                isScrolled 
-                  ? 'bg-emerald-theme text-white hover:bg-emerald-900 shadow-lg' 
-                  : 'bg-white/20 text-white border border-white/30 hover:bg-white hover:text-emerald-900'
-              }`}
-            >
-              Contact
-            </a>
           </div>
 
           <button 
             className={`md:hidden text-2xl ${isScrolled ? 'text-emerald-theme' : 'text-white'}`}
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label="Toggle Navigation"
           >
             <i className={mobileMenuOpen ? "fas fa-times" : "fas fa-bars"}></i>
           </button>
@@ -146,26 +162,19 @@ const App: React.FC = () => {
 
         {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden bg-white shadow-2xl absolute top-full left-0 right-0 p-8 flex flex-col space-y-6 border-t border-stone-100 animate-fade-in">
+          <div className="md:hidden bg-white shadow-2xl absolute top-full left-0 right-0 p-8 flex flex-col space-y-6 border-t border-stone-100 animate-fade-in overflow-y-auto max-h-[80vh]">
             {navLinks.map((link) => (
               <a
                 key={link.name}
                 href={link.href}
-                className={`text-lg font-semibold border-b border-stone-50 pb-3 transition-colors ${
+                className={`text-sm font-bold tracking-widest border-b border-stone-50 pb-3 transition-colors ${
                   activeSection === link.id ? 'text-emerald-800' : 'text-stone-800'
                 }`}
-                onClick={() => setMobileMenuOpen(false)}
+                onClick={(e) => handleNavClick(e, link.id)}
               >
                 {link.name}
               </a>
             ))}
-            <a 
-              href="#contact"
-              className="w-full py-4 bg-emerald-theme text-white text-center font-bold rounded-xl shadow-lg"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Get In Touch
-            </a>
           </div>
         )}
       </nav>
@@ -192,7 +201,7 @@ const App: React.FC = () => {
               Fostering environments where students achieve their intellectual, emotional, and social potential. 19+ years of expertise in higher education and administration.
             </p>
             <div className="flex flex-wrap gap-4 pt-4">
-              <a href="#about" className="px-8 py-4 bg-white text-emerald-900 font-bold rounded-full hover:bg-stone-100 transition-all shadow-xl hover:-translate-y-1">
+              <a href="#about" onClick={(e) => handleNavClick(e, 'about')} className="px-8 py-4 bg-white text-emerald-900 font-bold rounded-full hover:bg-stone-100 transition-all shadow-xl hover:-translate-y-1">
                 View Portfolio
               </a>
               <div className="flex space-x-4 items-center">
@@ -283,8 +292,8 @@ const App: React.FC = () => {
         </div>
       )}
 
-      {/* About Section */}
-      <section id="about" className="py-24 bg-white">
+      {/* ABOUT Section */}
+      <section id="about" className="py-24 bg-white scroll-mt-20">
         <div className="container mx-auto px-6">
           <SectionHeading 
             title="About Me" 
@@ -309,15 +318,15 @@ const App: React.FC = () => {
               <div className="space-y-8">
                 <div className="text-center">
                   <div className="text-4xl font-bold">19+</div>
-                  <div className="text-emerald-100 text-xs font-bold uppercase tracking-widest mt-1">Years in Education</div>
+                  <div className="text-emerald-100 text-[10px] font-bold uppercase tracking-widest mt-1">Years in Education</div>
                 </div>
                 <div className="text-center">
                   <div className="text-4xl font-bold">5+</div>
-                  <div className="text-emerald-100 text-xs font-bold uppercase tracking-widest mt-1">Major Guest Lectures</div>
+                  <div className="text-emerald-100 text-[10px] font-bold uppercase tracking-widest mt-1">Major Guest Lectures</div>
                 </div>
                 <div className="text-center">
                   <div className="text-4xl font-bold">PhD</div>
-                  <div className="text-emerald-100 text-xs font-bold uppercase tracking-widest mt-1">Anna University</div>
+                  <div className="text-emerald-100 text-[10px] font-bold uppercase tracking-widest mt-1">Anna University</div>
                 </div>
               </div>
             </div>
@@ -325,8 +334,8 @@ const App: React.FC = () => {
         </div>
       </section>
 
-      {/* Expertise Section */}
-      <section id="skills" className="py-24 bg-stone-50">
+      {/* EXPERTISE Section */}
+      <section id="expertise" className="py-24 bg-stone-50 scroll-mt-20">
         <div className="container mx-auto px-6">
           <SectionHeading title="Core Expertise" subtitle="Professional skills cultivated through years of academic and administrative leadership." />
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -350,13 +359,13 @@ const App: React.FC = () => {
         </div>
       </section>
 
-      {/* AI Enhancer Playground */}
+      {/* AI Photo Lab (Secondary Section) */}
       <AIEnhancer />
 
-      {/* Experience Section */}
-      <section id="experience" className="py-24 bg-white">
+      {/* JOURNEY Section */}
+      <section id="journey" className="py-24 bg-white scroll-mt-20">
         <div className="container mx-auto px-6">
-          <SectionHeading title="Professional Journey" />
+          <SectionHeading title="Professional Journey" subtitle="Detailed roles and responsibilities over 19+ years of service." />
           <div className="max-w-4xl mx-auto space-y-12">
             {EXPERIENCES.map((exp, idx) => (
               <div key={idx} className="relative pl-12 border-l-2 border-stone-100 pb-12 last:pb-0">
@@ -386,10 +395,10 @@ const App: React.FC = () => {
         </div>
       </section>
 
-      {/* Education Section */}
-      <section id="education" className="py-24 bg-stone-900 text-white">
+      {/* ACADEMIC Section */}
+      <section id="academic" className="py-24 bg-stone-900 text-white scroll-mt-20">
         <div className="container mx-auto px-6">
-          <SectionHeading title="Academic Credentials" light />
+          <SectionHeading title="Academic Credentials" subtitle="Education background, certifications, and research milestones." light />
           <div className="max-w-4xl mx-auto grid gap-6">
             {EDUCATION.map((edu, idx) => (
               <div key={idx} className="group bg-white/5 border border-white/10 p-8 rounded-2xl hover:bg-white/10 transition-all flex flex-wrap justify-between items-center gap-4">
@@ -420,23 +429,75 @@ const App: React.FC = () => {
         </div>
       </section>
 
-      {/* Footer / Contact */}
-      <footer id="contact" className="py-20 bg-white border-t border-stone-100">
-        <div className="container mx-auto px-6 text-center">
-          <div className="text-3xl font-serif font-bold text-emerald-theme mb-6">
-            Dr. A. Praveena
+      {/* CONTACT Section */}
+      <footer id="contact" className="py-24 bg-white border-t border-stone-100 scroll-mt-20">
+        <div className="container mx-auto px-6">
+          <SectionHeading title="Get In Touch" subtitle="Let's connect for academic collaborations or professional leadership opportunities." />
+          <div className="max-w-4xl mx-auto grid md:grid-cols-2 gap-12 text-left mb-16">
+            <div className="space-y-8">
+              <h4 className="text-2xl font-serif font-bold text-stone-900">Contact Information</h4>
+              <div className="space-y-6">
+                <div className="flex items-center space-x-4">
+                  <div className="w-12 h-12 flex items-center justify-center rounded-xl bg-emerald-theme/5 text-emerald-theme">
+                    <i className="fas fa-envelope text-xl"></i>
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-stone-400 uppercase tracking-widest">Email Address</p>
+                    <a href="mailto:drpraveena2017@gmail.com" className="text-stone-800 font-semibold hover:text-emerald-700 transition-colors">
+                      drpraveena2017@gmail.com
+                    </a>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-4">
+                  <div className="w-12 h-12 flex items-center justify-center rounded-xl bg-emerald-theme/5 text-emerald-theme">
+                    <i className="fas fa-map-marker-alt text-xl"></i>
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-stone-400 uppercase tracking-widest">Location</p>
+                    <p className="text-stone-800 font-semibold">Tamil Nadu, India</p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-4">
+                  <div className="w-12 h-12 flex items-center justify-center rounded-xl bg-emerald-theme/5 text-emerald-theme">
+                    <i className="fab fa-linkedin-in text-xl"></i>
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-stone-400 uppercase tracking-widest">Professional Profile</p>
+                    <a href="#" className="text-stone-800 font-semibold hover:text-emerald-700 transition-colors">
+                      LinkedIn Profile
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Simple Contact Form Placeholder */}
+            <div className="bg-stone-50 p-8 rounded-2xl border border-stone-100">
+              <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
+                <div>
+                  <input type="text" placeholder="Your Name" className="w-full p-4 bg-white border border-stone-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-800" />
+                </div>
+                <div>
+                  <input type="email" placeholder="Your Email" className="w-full p-4 bg-white border border-stone-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-800" />
+                </div>
+                <div>
+                  <textarea placeholder="Your Message" rows={4} className="w-full p-4 bg-white border border-stone-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-800 resize-none"></textarea>
+                </div>
+                <button className="w-full py-4 bg-emerald-theme text-white font-bold rounded-xl shadow-lg hover:bg-emerald-900 transition-all">
+                  Send Message
+                </button>
+              </form>
+            </div>
           </div>
-          <div className="flex justify-center space-x-6 mb-8">
-            <a href="mailto:drpraveena2017@gmail.com" className="w-12 h-12 flex items-center justify-center rounded-full bg-stone-50 text-stone-600 hover:bg-emerald-theme hover:text-white transition-all shadow-sm">
-              <i className="fas fa-envelope text-lg"></i>
-            </a>
-            <a href="#" className="w-12 h-12 flex items-center justify-center rounded-full bg-stone-50 text-stone-600 hover:bg-emerald-theme hover:text-white transition-all shadow-sm">
-              <i className="fab fa-linkedin-in text-lg"></i>
-            </a>
+          
+          <div className="text-center pt-12 border-t border-stone-100">
+            <div className="text-3xl font-serif font-bold text-emerald-theme mb-6">
+              Dr. A. Praveena
+            </div>
+            <p className="text-stone-400 text-sm font-medium tracking-wide">
+              &copy; {new Date().getFullYear()} Dr. A. Praveena. Professional Academic Portfolio. 19+ Years of Excellence.
+            </p>
           </div>
-          <p className="text-stone-400 text-sm font-medium tracking-wide">
-            &copy; {new Date().getFullYear()} Dr. A. Praveena. Professional Academic Portfolio. 19+ Years of Excellence.
-          </p>
         </div>
       </footer>
     </div>
