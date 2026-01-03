@@ -191,7 +191,7 @@ const App: React.FC = () => {
             <div className="inline-block px-4 py-1 bg-white/10 border border-white/20 rounded-full text-xs font-bold uppercase tracking-[0.2em]">
               Academician & Administrator
             </div>
-            <h1 className="text-5xl md:text-7xl font-serif font-bold leading-tight">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif font-bold leading-tight whitespace-nowrap">
               Dr. A. Praveena
             </h1>
             <p className="text-xl md:text-2xl font-light tracking-wide text-emerald-50">
@@ -491,7 +491,7 @@ const App: React.FC = () => {
           </div>
           
           <div className="text-center pt-12 border-t border-stone-100">
-            <div className="text-3xl font-serif font-bold text-emerald-theme mb-6">
+            <div className="text-2xl md:text-3xl font-serif font-bold text-emerald-theme mb-6 whitespace-nowrap">
               Dr. A. Praveena
             </div>
             <p className="text-stone-400 text-sm font-medium tracking-wide">
